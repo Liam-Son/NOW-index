@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Every hour
+  workflow_dispatch:
+
+jobs:
+  refresh-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install httpx
+
+      - name: Refresh NOW Index rankings
+        run: |
+          python scripts/hourly_refresh.py
+
+      - name: Run validation
+        run: |
+          python scripts/validate.py
+
+      - name: Generate reports
+        run: |
+          python scripts/generate_reports.py
+
+      - name: Commit and push data changes
+        run: |
+          git config --local user.email "bot@now-index.com"
+          git config --local user.name "NOW Index Bot"
+          git add data/ docs/
+          git diff --quiet && git diff --staged --quiet || \
+            (git commit -m "chore: auto-update NOW Index data [$(date -u '+%Y-%m-%d %H:%M UTC')]" && \
+             git push)
+
+      - name: Deploy to production
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "Deploying to production..."
+          # Add your deployment command here
+          # e.g., docker compose up -d --build
