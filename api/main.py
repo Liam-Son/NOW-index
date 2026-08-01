@@ -16,6 +16,7 @@ FastAPI-based API providing:
 from __future__ import annotations
 
 import os
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -31,12 +32,23 @@ from engine import (
 from engine.ranking import Ranker
 from database import SQLiteStore, ScoreStore
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Lifespan handler — saves an initial snapshot on startup."""
+    scores = ranker.get_all_scores()
+    if scores:
+        store.save_snapshot([s.to_dict() for s in scores])
+    yield
+
+
 app = FastAPI(
     title="NOW Index API",
     version="1.0.0",
     description="Open Platform & Public Ranking System — NOW Quant Framework",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -419,11 +431,4 @@ if WEBSITE_DIR.exists():
     app.mount("/", StaticFiles(directory=str(WEBSITE_DIR), html=True), name="website")
 
 
-# ─── Startup Event ───────────────────────────────────────────────────────────
-
-@app.on_event("startup")
-async def startup():
-    """Initial ranking and store on startup."""
-    scores = ranker.get_all_scores()
-    if scores:
-        store.save_snapshot([s.to_dict() for s in scores])
+# ─── Startup (handled by lifespan above) ─────────────────────────────────────
