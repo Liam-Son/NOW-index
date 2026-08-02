@@ -21,7 +21,12 @@
 
 ---
 
-## 📊 Overview
+## � Related Repositories
+
+- [NOW Index](https://github.com/Liam-Son/NOW-index) — core quant ranking engine, scoring framework, and API foundation
+- [Quant_NOW Performance](https://github.com/Liam-Son/Quant_NOW_Performance) — public performance dashboard and investment calculator for the NOW Index
+
+## �📊 Overview
 
 The **NOW Quant Framework** is an open-source, multi-factor quantitative ranking engine that evaluates global financial assets across 20+ asset classes. It powers the **NOW Index** — a public ranking system that scores assets from 0-100 based on 10 independent factors.
 
