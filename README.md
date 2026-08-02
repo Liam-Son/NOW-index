@@ -13,6 +13,9 @@
     <strong>API:</strong> <code>https://api.now-index.com</code> ·
     <strong>Docs:</strong> <a href="/api/docs">Swagger UI</a> · <a href="/api/redoc">ReDoc</a>
   </p>
+  <p>
+    <strong>Related project:</strong> <a href="https://github.com/Liam-Son/Quant_NOW_Performance">Quant_NOW Performance</a> — public performance dashboard and investment calculator for the NOW Index.
+  </p>
   <br/>
 </div>
 
