@@ -28,7 +28,7 @@
 
 ## �📊 Overview
 
-The **NOW Quant Framework** is an open-source, multi-factor quantitative ranking engine that evaluates global financial assets across 20+ asset classes. It powers the **NOW Index** — a public ranking system that scores assets from 0-100 based on 10 independent factors.
+The **NOW Quant Framework** is an open-source, multi-factor quantitative ranking engine that evaluates global financial assets across 20+ asset classes. It powers the **NOW Index** — a public ranking system that scores assets from 0-100 based on 10 independent factors. In this context, the score is a relative composite ranking used to compare assets within the model universe; it is not a standalone recommendation to buy or sell a security.
 
 Built for quantitative researchers, hedge funds, and individual investors, the framework is designed to be:
 
@@ -240,6 +240,85 @@ The NOW Score is a composite of 10 independent factors:
 | Fair | 60-69 | Adequate with some concerns |
 | Moderate | 50-59 | Below average, caution warranted |
 | Weak | <50 | Significant risk factors |
+
+---
+
+## ❓ What Score Should I Buy? — How to Read the NOW Score
+
+> **TL;DR — There is no single "magic number" to buy.** The NOW Score is a *relative composite ranking* (0–100), not an absolute measure of value, not a price target, and not a standalone buy/sell signal. A score only has meaning *within the peer universe it is ranked against* and *given the factor mix that produced it*.
+
+The most common question people ask when they see a 0–100 score is: *"What score should I buy for the stock?"* This section explains the logic properly.
+
+### 1. The core principle: it's a ranking, not a verdict
+
+Every score is computed by the **NOWScorer** from 10 weighted factors (see the table above). Assets are then **sorted by score and ranked**. So:
+
+- A **score of 80** does *not* mean "the stock is 80% cheap" or "you have an 80% chance of profit."
+- It means **the asset's combined factor profile ranks in the ~80th percentile of the current model universe** on the weighted dimensions the model cares about.
+- The same numerical score can imply *different things at different times*:
+  - If the whole universe is strong, a score of 65 might be **bottom-half**.
+  - If the whole universe is weak, a score of 65 might be **top-10**.
+
+Because the absolute number shifts with the universe, **rank and factor composition always matter more than the raw number.** This is why the site shows both the score *and* the rank (#1, #25, #87…) together.
+
+### 2. Reading the rating bands as an initial filter
+
+Think of the rating scale as a **screening filter**, not a trigger:
+
+| Rating | Score | What it suggests for a potential buyer | Not a substitute for… |
+|--------|-------|----------------------------------------|------------------------|
+| Excellent | 90–100 | Top-conviction candidates — strong on almost every factor. Still verify the **valuation level and entry timing** before buying. | Entry point, position sizing, future earnings revisions |
+| Strong | 80–89 | High-conviction names worth deep research. Open a watchlist and do the factor deep-dive below. | Due diligence on moat, management, competitive position |
+| Good | 70–79 | Solid fundamentals, but **check which factors are pulling the score down** and whether they matter to your strategy. | Understanding *why* the score isn't higher |
+| Fair | 60–69 | Adequate with some concerns — requires extra due diligence and usually a *valuation or risk discount*. | The specific weakness (e.g., low growth, high beta) |
+| Moderate | 50–59 | Below-average composite — caution warranted. Often only suitable for **tactical or contrarian** reasons. | A clear, falsifiable thesis for why the model is wrong |
+| Weak | <50 | Significant risk factors on the composite. Generally **avoid** unless you have strong independent reasons that the model is missing. | Independent research that overrides the model |
+
+> ⚠️ **High score ≠ cheap, and low score ≠ expensive.** Momentum, Quality, and Growth carry heavy weight, so a high-score asset can be *expensive* on valuation. Conversely, a low-score asset can be statistically cheap (value factor) but struggling on quality/momentum — the classic "value trap" profile.
+
+### 3. The 4 things that matter more than the number
+
+If someone asks *"what score should I buy?"*, the honest answer is: **no fixed threshold — but here is what to check before buying:**
+
+1. **Factor composition** — *Why* is the score what it is? Open the company profile and look at the 10-factor breakdown.
+   - Is it a high-score stock driven mostly by **Momentum**? That's fragile — momentum can reverse fast.
+   - Is it driven by **Quality + Financial Strength**? That's more durable.
+   - Does the factor mix match **your** investing style (growth vs. value vs. income vs. low-risk)?
+
+2. **Score trend** — Is the score *rising* or *falling*?
+   - Rising scores (see **Most Improved** leaderboards and the history chart) mean the composite is strengthening.
+   - Falling scores mean the composite is deteriorating — even a currently "good" score may be a warning.
+
+3. **Context** — Same score, different meaning:
+   - A 75 **REIT** is not directly comparable to a 75 **crypto** or 75 **US mega-cap**.
+   - Always compare within the same **asset class / sector / peer group** (use the filter and compare tools).
+
+4. **The universe itself** — Top-100 *rank* tells you the asset is strong *relative to the tracked universe*. The rank is the more stable, interpretable signal than the raw number.
+
+### 4. A step-by-step decision framework
+
+A practical "should I even consider buying?" checklist for any stock with a NOW Score:
+
+| Step | Action | Tool on the site |
+|------|--------|------------------|
+| 1. Screen | Start with **Top 100 / Strong (80+) / Excellent (90+)** bands as a watchlist, not an order ticket. | Leaderboards, Full Ranking |
+| 2. Factor breakdown | Open the company page; confirm the score is driven by factors that fit your strategy (quality/value vs. momentum). | Company Profile → Factor Breakdown |
+| 3. Check trend | Is the score rising or falling over 1W / 1M / 1Y? Rising = stronger composite. | Company Profile → Historical Scores, Most Improved |
+| 4. Compare peers | Compare the asset to its asset-class and sector peers, not across unrelated classes. | Compare Tool, Filter |
+| 5. Align horizon & risk | High-momentum scores suit shorter horizons; quality/financial-strength scores suit longer horizons. Match to your time horizon and risk tolerance. | Methodology |
+| 6. Independent confirmation | Verify with your own analysis: valuation, competitive position, macro context, and your portfolio allocation. **The score is a decision-support tool, not financial advice.** | — |
+
+### Bottom line
+
+> **Use the score as a first-class screen, then as a hypothesis to verify — not as a buy order.** A reasonable rule of thumb used by many NOW users:
+>
+> - **≥ 80 (Strong/Excellent)** → worth researching seriously; enter only with your own valuation & timing check.
+> - **70–79 (Good)** → worth a watchlist; buy only if the factor mix and trend justify it.
+> - **< 70** → generally requires a specific, well-supported reason before buying.
+>
+> And always remember: the NOW Score is a **relative composite ranking** that changes as the market and the model universe change. There is no fixed "buy above X" rule — and anyone who tells you there is, is not reading the score correctly.
+
+*The NOW Score is provided for research and educational purposes. It is not individualized investment advice. Always do your own due diligence and consider consulting a licensed financial advisor before making investment decisions.*
 
 ---
 
