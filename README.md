@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/badge/assets-50%2B-brightgreen" alt="Assets" />
   </p>
   <p>
-    <strong>Website:</strong> <a href="https://momentum-please.com">Momentum Please</a> ·
+<strong>Website:</strong> <a href="https://liam-son.github.io/NOW-index/">Momentum Please</a> ·
     <strong>API:</strong> <code>https://api.now-index.com</code> ·
     <strong>Docs:</strong> <a href="/api/docs">Swagger UI</a> · <a href="/api/redoc">ReDoc</a>
   </p>
@@ -443,8 +443,8 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 <div align="center">
   <p>Made with ❤️ by the NOW Quant Framework Team</p>
   <p>
-    <a href="https://github.com/Liam-Son/NOW-index">GitHub</a> ·
-    <a href="https://momentum-please.com">Website</a> ·
+<a href="https://github.com/Liam-Son/NOW-index">GitHub</a> ·
+    <a href="https://liam-son.github.io/NOW-index/">Website</a> ·
     <a href="/api/docs">API Docs</a>
   </p>
 </div>
