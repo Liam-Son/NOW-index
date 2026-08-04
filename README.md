@@ -21,12 +21,32 @@
 
 ---
 
-## � Related Repositories
+## 🔗 Related Repositories
 
 - [NOW Index](https://github.com/Liam-Son/NOW-index) — core quant ranking engine, scoring framework, and API foundation
 - [Quant_NOW Performance](https://github.com/Liam-Son/Quant_NOW_Performance) — public performance dashboard and investment calculator for the NOW Index
 
-## �📊 Overview
+## 🎯 Scope & Definition
+
+**What is the NOW Index?** A clearly defined, multi-factor composite ranking that scores financial assets from **0 to 100** by combining **10 weighted factors** (Quality, Value, Growth, Momentum, Low Risk, Undervalued, Long-Term, Dividend, Innovation, Financial Strength). The score is a **relative rank** within the tracked model universe — not a price target, not an absolute "fair value," and not a standalone buy/sell signal.
+
+**What problem does it solve?** It collapses a large, heterogeneous set of financial data points into a single, explainable, comparable score so investors and researchers can *screen* candidates, *compare* assets within a peer set, and *track* changes over time — then apply their own valuation, risk, and time-horizon judgment.
+
+**What is NOT in scope (v1):**
+
+- It is **not** a recommendation engine or "magic buy number."
+- It is **not** investment advice and is explicitly labeled as such.
+- It does **not** currently consume live market data — see [Data Sources](docs/DATA_SOURCES.md) for the honest status and the live-data roadmap.
+
+**How is credibility maintained?** The engine ships with a deterministic simulated data layer (for reproducible, end-to-end CI), a validation script (`scripts/validate.py`), and a reproducible backtest/accuracy benchmark (`scripts/backtest.py` + [Backtesting docs](docs/BACKTESTING.md)).
+
+---
+
+## 📊 Overview
+
+
+
+
 
 The **NOW Quant Framework** is an open-source, multi-factor quantitative ranking engine that evaluates global financial assets across 20+ asset classes. It powers the **NOW Index** — a public ranking system that scores assets from 0-100 based on 10 independent factors. In this context, the score is a relative composite ranking used to compare assets within the model universe; it is not a standalone recommendation to buy or sell a security.
 
@@ -107,14 +127,19 @@ now-index/
 ├── scripts/                 # Automation scripts
 │   ├── hourly_refresh.py    # Hourly scoring pipeline
 │   ├── validate.py          # Data validation
+│   ├── backtest.py          # Reproducible backtest/accuracy benchmark
+│   ├── export_static.py     # Export static JSON for GitHub Pages
 │   └── generate_reports.py  # Daily/weekly/monthly reports
 ├── tests/                   # Test suite
 │   ├── test_scoring.py      # Engine tests
 │   └── test_api.py          # API integration tests
 ├── .github/workflows/       # CI/CD pipelines
 │   ├── ci.yml               # Continuous integration
-│   └── deploy.yml           # Hourly deployment
+│   ├── deploy.yml           # Hourly deployment
+│   └── pages.yml            # GitHub Pages static deployment
 ├── docs/                    # Documentation
+│   ├── DATA_SOURCES.md      # Data layer & live-data roadmap
+│   ├── BACKTESTING.md       # Backtest methodology & validation
 │   └── examples/            # Example notebooks
 ├── Dockerfile
 ├── docker-compose.yml
@@ -346,6 +371,35 @@ A practical "should I even consider buying?" checklist for any stock with a NOW 
 | Sector ETFs | XLF, XLK, XLV | ✅ |
 | Country ETFs | EEM, VWO | ✅ |
 | Preferred Shares | - | ✅ |
+
+---
+
+## 🧪 Backtesting & Validation
+
+Quantitative tools rely on credibility. This repository ships with a
+reproducible validation pipeline so results are auditable and trustworthy:
+
+| Tool | Purpose |
+|------|---------|
+| [`scripts/validate.py`](scripts/validate.py) | Hard integrity checks: score bounds, no NaN, rank contiguity, distribution sanity (wired into CI) |
+| [`scripts/backtest.py`](scripts/backtest.py) | Reproducible accuracy benchmark — rank stability (Kendall tau), score drift, and per-factor drift across snapshots |
+| [`docs/BACKTESTING.md`](docs/BACKTESTING.md) | Methodology, metrics, and how to interpret results |
+| [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) | Honest data-layer status and the roadmap to live market data |
+
+### Run the backtest
+
+```bash
+python scripts/backtest.py
+# or write a Markdown report
+python scripts/backtest.py --out docs/reports/backtest_report.md
+```
+
+> **Note:** The engine currently ships with a deterministic
+> `SimulatedDataProvider` so the full stack is reproducible end-to-end. The
+> backtest measures *mechanical stability* (is the pipeline deterministic and
+> stable?), not predictive alpha. When a live data provider is wired in (see
+> [Data Sources](docs/DATA_SOURCES.md)), the same harness should be extended
+> with forward-return analysis.
 
 ---
 

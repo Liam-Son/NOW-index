@@ -3,7 +3,15 @@
  * Interactive Dashboard & Ranking UI
  */
 
-const API_BASE = '/api';
+// API_BASE is configurable for GitHub Pages sub-path hosting.
+// When deployed to https://<user>.github.io/<repo>/, the base becomes '/<repo>/api'.
+// Defaults to '/api' for local / self-hosted FastAPI.
+const API_BASE = (typeof window !== 'undefined' && window.NOW_API_BASE)
+    ? window.NOW_API_BASE
+    : '/api';
+
+// Static data file used when the live API is unavailable (GitHub Pages).
+const STATIC_DATA_URL = './static_data/now_data.json';
 
 // ─── State ──────────────────────────────────────────────────────────────────
 const state = {
@@ -13,16 +21,136 @@ const state = {
     searchResults: [],
     watchlist: JSON.parse(localStorage.getItem('now_watchlist') || '[]'),
     theme: localStorage.getItem('now_theme') || 'dark',
+    staticData: null,   // cached static payload (fallback mode)
+    isStatic: false,    // true once we fall back to static data
 };
 
-// ─── API Client ─────────────────────────────────────────────────────────────
-async function apiFetch(path) {
-    const res = await fetch(`${API_BASE}${path}`);
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: res.statusText }));
-        throw new Error(err.detail || res.statusText);
+// ─── Static data resolver ───────────────────────────────────────────────────
+async function loadStaticData() {
+    if (state.staticData) return state.staticData;
+    const res = await fetch(STATIC_DATA_URL);
+    if (!res.ok) throw new Error('Static data unavailable');
+    state.staticData = await res.json();
+    state.isStatic = true;
+    return state.staticData;
+}
+
+// Resolve an API path against the static payload. Returns a Promise of the
+// JSON response shape that matches the live FastAPI endpoints.
+async function resolveStatic(path) {
+    const data = await loadStaticData();
+    const clean = path.split('?')[0];
+
+    // /health
+    if (clean === '/health') return data.health || { status: 'ok', version: '1.0.0' };
+
+    // /stats
+    if (clean === '/stats') return data.stats || {};
+
+    // /top10 /top25 /top50 /top100
+    if (clean === '/top10') return { results: (data.leaderboard?.top_10 || []).slice(0, 10) };
+    if (clean === '/top25') return { results: (data.leaderboard?.top_25 || []).slice(0, 25) };
+    if (clean === '/top50') return { results: (data.leaderboard?.top_50 || []).slice(0, 50) };
+    if (clean === '/top100') return { results: (data.leaderboard?.top_100 || []).slice(0, 100) };
+
+    // /leaderboard and /leaderboard/{category}
+    if (clean === '/leaderboard') return data.leaderboard || {};
+    if (clean.startsWith('/leaderboard/')) {
+        const cat = clean.split('/')[2];
+        const results = data.leaderboard?.[cat] || [];
+        return { category: cat, results };
     }
-    return res.json();
+
+    // /ranking?per_page=&page=
+    if (clean === '/ranking') {
+        const params = new URLSearchParams(path.split('?')[1] || '');
+        const per_page = parseInt(params.get('per_page') || '50', 10);
+        const page = parseInt(params.get('page') || '1', 10);
+        const all = data.all_scores || [];
+        const start = (page - 1) * per_page;
+        const end = start + per_page;
+        return {
+            page, per_page, total: all.length,
+            total_pages: Math.max(1, Math.ceil(all.length / per_page)),
+            results: all.slice(start, end),
+        };
+    }
+
+    // /company/{ticker}
+    if (clean.startsWith('/company/')) {
+        const ticker = clean.split('/')[2].toUpperCase();
+        const company = data.companies?.[ticker];
+        if (!company) throw new Error(`Asset '${ticker}' not found`);
+        return {
+            profile: company.profile,
+            now_score: company.now_score,
+            history: company.history || [],
+            factor_weights: company.now_score?.factors || {},
+        };
+    }
+
+    // /compare?tickers=AAPL,MSFT
+    if (clean === '/compare') {
+        const params = new URLSearchParams(path.split('?')[1] || '');
+        const tickers = (params.get('tickers') || '').split(',').map(t => t.trim().toUpperCase()).filter(Boolean);
+        const results = tickers.map(ticker => {
+            const company = data.companies?.[ticker];
+            if (!company) return { ticker, error: 'Not found' };
+            return {
+                ticker,
+                profile: company.profile,
+                now_score: company.now_score,
+                history: company.history || [],
+            };
+        });
+        return { tickers, count: results.length, results };
+    }
+
+    // /search?q=
+    if (clean === '/search') {
+        const params = new URLSearchParams(path.split('?')[1] || '');
+        const q = (params.get('q') || '').toUpperCase();
+        const results = [];
+        for (const [ticker, company] of Object.entries(data.companies || {})) {
+            if (ticker.toUpperCase().includes(q) || (company.profile?.name || '').toUpperCase().includes(q)) {
+                results.push({ asset: company.profile, now_score: company.now_score });
+            }
+        }
+        return { query: q, count: results.length, results: results.slice(0, 50) };
+    }
+
+    // /history?ticker=AAPL&days=365
+    if (clean === '/history') {
+        const params = new URLSearchParams(path.split('?')[1] || '');
+        const ticker = (params.get('ticker') || '').toUpperCase();
+        const company = data.companies?.[ticker];
+        if (!company) throw new Error(`Asset '${ticker}' not found`);
+        return { ticker, asset_id: company.profile?.asset_id, count: company.history?.length || 0, history: company.history || [] };
+    }
+
+    // /refresh (POST) — no-op in static mode
+    if (clean === '/refresh') return { status: 'ok', static: true };
+
+    throw new Error(`Unsupported endpoint in static mode: ${clean}`);
+}
+
+// ─── API Client ─────────────────────────────────────────────────────────────
+async function apiFetch(path, options = {}) {
+    // Only try the live API for GET requests; POST /refresh is a no-op in static mode.
+    const isGet = !options.method || options.method === 'GET';
+    if (isGet) {
+        try {
+            const res = await fetch(`${API_BASE}${path}`, {
+                headers: { 'Content-Type': 'application/json' },
+                ...options,
+            });
+            if (res.ok) return res.json();
+        } catch (e) {
+            // network error → fall through to static
+        }
+    }
+    // Fall back to static data (GitHub Pages cannot run the FastAPI backend).
+    return resolveStatic(path);
 }
 
 // ─── Navigation ─────────────────────────────────────────────────────────────
@@ -862,7 +990,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ─── Refresh ────────────────────────────────────────────────────────────────
 async function refreshData() {
     try {
-        await apiFetch('/refresh');
+        await apiFetch('/refresh', { method: 'POST' });
         const stamp = document.getElementById('refreshTime');
         if (stamp) stamp.textContent = new Date().toLocaleTimeString();
         navigate(state.currentView);
