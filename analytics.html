@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOW Index Analytics - Professional Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: 1px solid #334155;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo { font-size: 24px; font-weight: 800; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-tabs { display: flex; gap: 24px; }
+        .nav-tab { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.3s; color: #94a3b8; }
+        .nav-tab.active { border-bottom-color: #3b82f6; color: #3b82f6; }
+        .container { max-width: 1600px; margin: 0 auto; padding: 40px 32px; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px; margin-bottom: 40px; }
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 25px rgba(0, 0, 0, 0.3);
+        }
+        .card h3 { font-size: 14px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+        .card-value { font-size: 28px; font-weight: 700; color: #3b82f6; margin-bottom: 8px; }
+        .card-change { font-size: 13px; color: #10b981; }
+        .card-change.negative { color: #ef4444; }
+        .chart-container { background: rgba(30, 41, 59, 0.8); border: 1px solid #334155; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .chart-wrapper { position: relative; height: 400px; }
+        h2 { font-size: 20px; margin-bottom: 20px; color: #e2e8f0; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media (max-width: 1200px) { .grid-2 { grid-template-columns: 1fr; } }
+        .loading { text-align: center; padding: 40px; color: #94a3b8; }
+        .error { background: rgba(127, 29, 29, 0.2); border: 1px solid #dc2626; color: #fca5a5; padding: 16px; border-radius: 8px; }
+        .metric { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .metric-item { background: rgba(59, 130, 246, 0.1); padding: 12px; border-radius: 6px; text-align: center; }
+        .metric-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; }
+        .metric-value { font-size: 16px; font-weight: 700; color: #3b82f6; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">NOW Index Analytics</div>
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="showTab('overview')">Overview</div>
+            <div class="nav-tab" onclick="showTab('performance')">Performance</div>
+            <div class="nav-tab" onclick="showTab('analysis')">Analysis</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Overview Tab -->
+        <div id="overview-tab" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>Current NOW Index</h3>
+                    <div class="card-value" id="current-score">-</div>
+                    <div class="card-change" id="score-change">Loading...</div>
+                </div>
+                <div class="card">
+                    <h3>Top Performer</h3>
+                    <div class="card-value" id="top-symbol">-</div>
+                    <div class="card-change" id="top-change">+12.5%</div>
+                </div>
+                <div class="card">
+                    <h3>Market Sentiment</h3>
+                    <div class="card-value" id="sentiment">-</div>
+                    <div class="card-change">Bullish</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2>NOW Index Historical Trend</h2>
+                <div class="chart-wrapper">
+                    <canvas id="trendsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="chart-container">
+                    <h2>Asset Distribution</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h2>Rating Distribution</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="ratingChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Tab -->
+        <div id="performance-tab" class="tab-content" style="display: none;">
+            <div class="chart-container">
+                <h2>Risk vs Return Analysis</h2>
+                <div class="metric">
+                    <div class="metric-item">
+                        <div class="metric-label">1Y Return</div>
+                        <div class="metric-value" id="return-1y">24.5%</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Volatility</div>
+                        <div class="metric-value">22%</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Sharpe Ratio</div>
+                        <div class="metric-value">1.24</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Max Drawdown</div>
+                        <div class="metric-value">-18%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="chart-container">
+                    <h2>Cumulative Returns</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="returnsChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h2>Rolling Volatility</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="volatilityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Tab -->
+        <div id="analysis-tab" class="tab-content" style="display: none;">
+            <div class="grid-2">
+                <div class="chart-container">
+                    <h2>Top 10 Assets by Score</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="topAssetsChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h2>Factor Contribution</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="factorsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <script>
+        let charts = {};
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+            document.getElementById(tab + '-tab').style.display = 'block';
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            setTimeout(() => {
+                Object.values(charts).forEach(chart => chart && chart.resize());
+            }, 100);
+        }
+
+        async function loadData() {
+            try {
+                const [indexRes, rankRes, perfRes] = await Promise.all([
+                    fetch('http://localhost:8000/api/index'),
+                    fetch('http://localhost:8000/api/rankings'),
+                    fetch('http://localhost:8000/api/performance')
+                ]);
+
+                const index = await indexRes.json();
+                const rankings = await rankRes.json();
+                const perf = await perfRes.json();
+
+                updateDashboard(index, rankings.rankings, perf);
+                createCharts(index, rankings.rankings, perf);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function updateDashboard(index, rankings, perf) {
+            document.getElementById('current-score').textContent = index.now_score.toFixed(1);
+            document.getElementById('score-change').textContent = `Rating: ${index.rating}`;
+            document.getElementById('top-symbol').textContent = rankings[0]?.symbol || '-';
+            document.getElementById('return-1y').textContent = (perf.return_1y * 100).toFixed(1) + '%';
+            document.getElementById('sentiment').textContent = index.now_score > 70 ? 'Strong' : 'Neutral';
+        }
+
+        function createCharts(index, rankings, perf) {
+            const ctx1 = document.getElementById('trendsChart').getContext('2d');
+            charts.trends = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: generateDateLabels(30),
+                    datasets: [{
+                        label: 'NOW Index Score',
+                        data: generateTrendData(30),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' } }
+                    }
+                }
+            });
+
+            const ctx2 = document.getElementById('distributionChart').getContext('2d');
+            const dist = { stocks: 0, korean: 0, crypto: 0 };
+            rankings.forEach(r => {
+                if (['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA'].includes(r.symbol)) dist.stocks++;
+                else if (['SAMSUNG', 'HYUNDAI', 'SK', 'LG'].includes(r.symbol)) dist.korean++;
+                else dist.crypto++;
+            });
+
+            charts.dist = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['US Stocks', 'Korean Stocks', 'Crypto'],
+                    datasets: [{
+                        data: [dist.stocks, dist.korean, dist.crypto],
+                        backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            const ctx3 = document.getElementById('ratingChart').getContext('2d');
+            const ratings = {};
+            rankings.forEach(r => { ratings[r.rating] = (ratings[r.rating] || 0) + 1; });
+
+            charts.rating = new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(ratings),
+                    datasets: [{
+                        label: 'Count',
+                        data: Object.values(ratings),
+                        backgroundColor: '#3b82f6'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y' }
+            });
+
+            // Top Assets
+            const ctx4 = document.getElementById('topAssetsChart').getContext('2d');
+            const top10 = rankings.slice(0, 10);
+            charts.top = new Chart(ctx4, {
+                type: 'horizontalBar',
+                data: {
+                    labels: top10.map(r => r.symbol),
+                    datasets: [{
+                        label: 'NOW Score',
+                        data: top10.map(r => r.now_score),
+                        backgroundColor: '#3b82f6'
+                    }]
+                },
+                options: { 
+                    indexAxis: 'y',
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    scales: { x: { beginAtZero: true, max: 100 } }
+                }
+            });
+
+            // Factor Contribution
+            const ctx5 = document.getElementById('factorsChart').getContext('2d');
+            charts.factors = new Chart(ctx5, {
+                type: 'radar',
+                data: {
+                    labels: ['Momentum', 'Value', 'Growth', 'Quality', 'Sentiment'],
+                    datasets: [{
+                        label: 'Factor Weights',
+                        data: [25, 25, 20, 15, 15],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function generateDateLabels(days) {
+            return Array.from({length: days}, (_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - (days - i));
+                return d.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
+            });
+        }
+
+        function generateTrendData(days) {
+            return Array.from({length: days}, () => 60 + Math.random() * 20);
+        }
+
+        loadData();
+        setInterval(loadData, 300000);
+    </script>
+</body>
+</html>

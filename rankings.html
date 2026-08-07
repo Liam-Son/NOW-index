@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOW Index - Institutional Investment Rankings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: #0a0e27;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .navbar {
+            background: linear-gradient(90deg, #0f172a 0%, #1a202c 100%);
+            border-bottom: 1px solid #334155;
+            padding: 16px 32px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 32px;
+        }
+
+        header {
+            margin-bottom: 48px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 1px solid #334155;
+            background: rgba(30, 41, 59, 0.5);
+            color: #cbd5e1;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 13px;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border-color: transparent;
+            color: white;
+        }
+
+        .search-box {
+            padding: 10px 16px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 13px;
+            width: 250px;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .table-container {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: rgba(30, 41, 59, 0.8);
+            border-bottom: 1px solid #334155;
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-right: 1px solid #334155;
+        }
+
+        th:last-child {
+            border-right: none;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #1e293b;
+            transition: all 0.3s;
+        }
+
+        tbody tr:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-bottom-color: #334155;
+        }
+
+        td {
+            padding: 16px;
+            font-size: 13px;
+            border-right: 1px solid #1e293b;
+        }
+
+        td:last-child {
+            border-right: none;
+        }
+
+        .rank-cell {
+            font-weight: 700;
+            color: #3b82f6;
+            width: 50px;
+        }
+
+        .symbol-cell {
+            font-weight: 600;
+            font-size: 14px;
+            color: #e2e8f0;
+        }
+
+        .name-cell {
+            color: #cbd5e1;
+            font-size: 12px;
+        }
+
+        .score-cell {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .score-high {
+            color: #10b981;
+        }
+
+        .score-mid {
+            color: #f59e0b;
+        }
+
+        .score-low {
+            color: #ef4444;
+        }
+
+        .rating-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .rating-exceptional { background: #10b981; color: white; }
+        .rating-excellent { background: #06b6d4; color: white; }
+        .rating-buy { background: #0ea5e9; color: white; }
+        .rating-accumulate { background: #f59e0b; color: white; }
+        .rating-hold { background: #f97316; color: white; }
+        .rating-wait { background: #ef4444; color: white; }
+        .rating-reduce { background: #dc2626; color: white; }
+        .rating-avoid { background: #7f1d1d; color: white; }
+
+        .price-cell {
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+
+        .change-cell {
+            font-weight: 600;
+        }
+
+        .change-positive {
+            color: #10b981;
+        }
+
+        .change-negative {
+            color: #ef4444;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #334155;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(127, 29, 29, 0.2);
+            border: 1px solid #dc2626;
+            color: #fca5a5;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 32px;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+        }
+
+        .pagination button:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .pagination button.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 32px;
+            border-top: 1px solid #334155;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .table-container { overflow-x: auto; }
+            .controls { flex-direction: column; align-items: flex-start; }
+            .search-box { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-left">
+            <div class="logo">NOW Index</div>
+        </div>
+        <div class="navbar-right">
+            <span class="status-dot"></span>
+            <span>Live Data</span>
+            <span id="last-update">Updated now</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Asset Rankings</h1>
+            <p class="subtitle">Institutional-grade investment scores updated in real-time</p>
+        </header>
+
+        <div class="controls">
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">All Assets</button>
+                <button class="filter-btn" data-filter="stocks">US Stocks</button>
+                <button class="filter-btn" data-filter="korean">Korean Stocks</button>
+                <button class="filter-btn" data-filter="crypto">Cryptocurrencies</button>
+            </div>
+            <input type="text" class="search-box" id="search" placeholder="Search symbol or name...">
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading rankings...</p>
+        </div>
+
+        <div id="table-wrapper" style="display: none;">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Symbol</th>
+                            <th>Name</th>
+                            <th>NOW Score</th>
+                            <th>Rating</th>
+                            <th>Price</th>
+                            <th>Change 24H</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rankings-body"></tbody>
+                </table>
+            </div>
+            <div class="pagination" id="pagination"></div>
+        </div>
+
+        <footer>
+            <p>&copy; 2025 NOW Index. Institutional Investment Platform. | <a href="/api/docs" style="color: #3b82f6;">API Docs</a></p>
+        </footer>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api/rankings';
+        let allRankings = [];
+        let filteredRankings = [];
+        let currentFilter = 'all';
+        let currentPage = 1;
+        const itemsPerPage = 20;
+
+        const categoryMap = {
+            'AAPL': 'stocks', 'MSFT': 'stocks', 'GOOGL': 'stocks', 'AMZN': 'stocks', 'NVDA': 'stocks',
+            'TSLA': 'stocks', 'META': 'stocks', 'BERKB': 'stocks', 'NFLX': 'stocks', 'ADBE': 'stocks',
+            'CRM': 'stocks', 'INTU': 'stocks', 'SNPS': 'stocks', 'CDNS': 'stocks', 'PYPL': 'stocks',
+            'ASML': 'stocks', 'AMAT': 'stocks', 'LRCX': 'stocks', 'QCOM': 'stocks', 'AMD': 'stocks',
+            'KLAC': 'stocks', 'MU': 'stocks', 'AVGO': 'stocks', 'DXCM': 'stocks', 'NXPI': 'stocks',
+            'VRTX': 'stocks', 'CSX': 'stocks', 'CSCO': 'stocks', 'CMCS': 'stocks', 'JD': 'stocks',
+            'PEP': 'stocks', 'COST': 'stocks',
+            'SAMSUNG': 'korean', 'HYUNDAI': 'korean', 'SK': 'korean', 'LG': 'korean', 'NAVER': 'korean',
+            'KAKAO': 'korean', 'KIWOOM': 'korean', 'CJ': 'korean', 'HANA': 'korean', 'KOREA': 'korean',
+            'LOTTE': 'korean', 'GS': 'korean', 'S-OIL': 'korean', 'POSCO': 'korean', 'SAMSUNG C&T': 'korean',
+            'SAMSUNG SDI': 'korean', 'SK TELECOM': 'korean', 'KT CORP': 'korean', 'LGU+': 'korean',
+            'NHN': 'korean', 'COUPANG': 'korean', 'WOORI': 'korean', 'SHINHAN': 'korean', 
+            'SAMSUNG LIFE': 'korean', 'HYUNDAI MOBIS': 'korean', 'HYUNDAI STEEL': 'korean'
+        };
+
+        function getRatingClass(rating) {
+            return 'rating-' + rating.toLowerCase().replace(/\s+/g, '-');
+        }
+
+        function getScoreClass(score) {
+            if (score >= 80) return 'score-high';
+            if (score >= 60) return 'score-mid';
+            return 'score-low';
+        }
+
+        function formatPrice(price) {
+            if (price > 1000) return '$' + price.toFixed(0);
+            return '$' + price.toFixed(2);
+        }
+
+        function formatChange(change) {
+            const sign = change >= 0 ? '+' : '';
+            const cls = change >= 0 ? 'change-positive' : 'change-negative';
+            return `<span class="${cls}">${sign}${(change * 100).toFixed(2)}%</span>`;
+        }
+
+        function filterAndSearch() {
+            filteredRankings = allRankings.filter(item => {
+                const matchFilter = currentFilter === 'all' || (categoryMap[item.symbol] || 'crypto') === currentFilter;
+                const searchTerm = document.getElementById('search').value.toLowerCase();
+                const matchSearch = !searchTerm || 
+                    item.symbol.toLowerCase().includes(searchTerm) ||
+                    (item.name && item.name.toLowerCase().includes(searchTerm));
+                return matchFilter && matchSearch;
+            });
+            currentPage = 1;
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('rankings-body');
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageItems = filteredRankings.slice(start, end);
+
+            tbody.innerHTML = pageItems.map(item => `
+                <tr>
+                    <td class="rank-cell">#${item.rank}</td>
+                    <td class="symbol-cell">${item.symbol}</td>
+                    <td class="name-cell">${item.name || item.symbol}</td>
+                    <td class="score-cell ${getScoreClass(item.now_score)}">${item.now_score.toFixed(1)}</td>
+                    <td><span class="rating-badge ${getRatingClass(item.rating)}">${item.rating}</span></td>
+                    <td class="price-cell">${formatPrice(item.price || 0)}</td>
+                    <td class="change-cell">${formatChange(item.change_24h || 0)}</td>
+                </tr>
+            `).join('');
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredRankings.length / itemsPerPage);
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            for (let i = 1; i <= Math.min(totalPages, 5); i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.className = i === currentPage ? 'active' : '';
+                btn.onclick = () => { currentPage = i; renderTable(); };
+                pagination.appendChild(btn);
+            }
+        }
+
+        async function loadRankings() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('API Error');
+                
+                const data = await response.json();
+                allRankings = data.rankings || [];
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('table-wrapper').style.display = 'block';
+                document.getElementById('last-update').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+                
+                filterAndSearch();
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = `Error: ${error.message}. Make sure the API is running.`;
+            }
+        }
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                filterAndSearch();
+            });
+        });
+
+        document.getElementById('search').addEventListener('input', filterAndSearch);
+
+        loadRankings();
+        setInterval(loadRankings, 300000);
+    </script>
+</body>
+</html>
